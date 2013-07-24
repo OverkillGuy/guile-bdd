@@ -17,6 +17,8 @@ Makefile.in
 
 config.log
 config.status
+*.log
+*.trs
 
 # emacs
 

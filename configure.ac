@@ -12,6 +12,7 @@ AC_SUBST(GUILE)
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
+	src/test/Makefile
 	test/Makefile
 	])
 

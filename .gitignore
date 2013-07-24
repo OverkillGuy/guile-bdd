@@ -13,6 +13,10 @@ Makefile.in
 /missing
 /test-driver
 
+# configure
+
+Makefile
+
 # temporary files
 
 config.log

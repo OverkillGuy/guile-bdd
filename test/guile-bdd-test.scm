@@ -17,6 +17,6 @@
 ;; along with this program.  If not, see {http://www.gnu.org/licenses/}.
 
 (use-modules (ice-9 format)
-	     (guile-bdd))
+	     (test bdd))
 
 

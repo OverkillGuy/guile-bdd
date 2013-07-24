@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # guile-bdd - A behavior driven development framework for GNU Guile
 # Copyright (C) 2013  Cyrill Schenkel
 #
@@ -15,7 +17,5 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see {http://www.gnu.org/licenses/}.
-
-#!/bin/bash
 
 return 0

@@ -51,7 +51,7 @@ defining scenarios for a story please use the `scenario' macro."
 	(i-want-to intention)
 	scenarios ...)
      (define name 
-       `(story description purpose who intention
+       `(story ,description ,purpose ,who ,intention
 	       (,scenarios ...))))))
 
 (define-syntax scenario
@@ -65,12 +65,12 @@ its preconditions. A scenario is part of a story (See: `define-story')."
 	(when (output-values ...)
 	  actions ...)
 	(then assertions ...))
-     '(number description
-	      (given (input-values ...)
-		preconditions ...)
-	      (when (output-values ...)
-		actions ...)
-	      (then assertions ...)))))
+     `(,number ,description
+	       (given (input-values ...)
+		 preconditions ...)
+	       (when (output-values ...)
+		 actions ...)
+	       (then assertions ...)))))
 
 (define (story-description story)
   "Accessor function for the description of a story."

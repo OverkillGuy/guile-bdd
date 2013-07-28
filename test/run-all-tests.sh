@@ -36,6 +36,14 @@
     [Actual  ] ~s => ~a
     [Expected] ~s => ~a" context actual actual expected expected)) #t))
 
+(define (assert-not-equal context unexpected actual)
+  (if (equal? unexpected actual)
+      (assertion-error
+       (format #f "~a~%  The actual value is equal to the unexpected value.
+    [Actual  ] ~s => ~a
+    [Expected] ~s => ~a" context actual actual
+    `(not ,unexpected) `(not ,unexpected))) #t))
+
 (define (ignore test-case)
   (lambda () 0))
 
@@ -72,13 +80,12 @@
 (define test-purpose "test the bdd framework")
 (define stakeholder "developer")
 (define intention "create a fictional story")
-(define scenario-format "test format ~a")
 
 (define-story story-with-one-scenario "Story with one scenario"
   (in-order-to test-purpose)
   (as-a stakeholder)
   (i-want-to intention)
-  (scenario 1 (format #f scenario-format 1)
+  (scenario 1 (format #f "test scenario ~a" 1)
 	    (given ((x 5))
 	      (do-some-initialization)
 	      (and-some-more))
@@ -91,7 +98,7 @@
   (in-order-to test-purpose)
   (as-a stakeholder)
   (i-want-to intention)
-  (scenario 1 (format #f scenario-format 1)
+  (scenario 1 (format #f "test scenario ~a" 1)
 	    (given ((x 5))
 	      (do-some-initialization)
 	      (and-some-more))
@@ -99,7 +106,7 @@
 	      (some-action))
 	    (then
 		(assert-this-and-that)))
-  (scenario 2 (format #f scenario-format 2)
+  (scenario 2 (format #f "test scenario ~a" 2)
 	    (given ()
 	      (do-some-initialization)
 	      (and-some-more))
@@ -107,7 +114,7 @@
 	      (some-action))
 	    (then
 		(assert-this-and-that)))
-  (scenario 4 (format #f scenario-format 4)
+  (scenario 4 (format #f "test scenario ~a" 4)
 	    (given ())
 	    (when ()
 	      (some-action))
@@ -242,7 +249,7 @@ the numbers 1, 2 and 4.")
 	;; Then
 	(assert-equal
 	 context 
-	 (scenario 4 (format #f scenario-format 4)
+	 (scenario 4 (format #f "test scenario ~a" 4)
 		   (given ()) (when () (some-action))
 		   (then (assert-this-and-that)))
 	 actual-returned-scenario))
@@ -261,7 +268,7 @@ the numbers 1, 2 and 4.")
 	;; Then
 	(assert-equal
 	 context 
-	 (scenario 1 (format #f scenario-format 1)
+	 (scenario 1 (format #f "test scenario ~a" 1)
 		   (given ((x 5))
 		     (do-some-initialization)
 		     (and-some-more))
@@ -426,6 +433,261 @@ scenario with the number 3")
 	;; Then
 	(assert-equal context 90 actual-returned-number)))))
 
+(define assert-that-test
+  `("assert-that test" .
+    (,(lambda ()
+	(define context
+	  "should throw an assertion-exception if the values aren't
+equal")
+	;; Given
+	(define given-actual-value 1)
+	(define given-expected-value "test")
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value is given-expected-value)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-not-equal context #t actual-result)
+	(assert-equal context #t (assertion-error? actual-result)))
+     ,(lambda ()
+	(define context
+	  "should throw an assertion-exception if the values are
+equal")
+	;; Given
+	(define given-actual-value 1)
+	(define given-expected-value 1)
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda ()
+	      (assert-that given-actual-value is not given-expected-value)
+	      #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-not-equal context actual-result #t)
+	(assert-equal context (assertion-error? actual-result) #t))
+     ,(lambda ()
+	(define context
+	  "should throw an assertion-exception if the value is '()")
+	;; Given
+	(define given-actual-value '())
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value is not null)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-not-equal context actual-result #t)
+	(assert-equal context (assertion-error? actual-result) #t))
+     ,(lambda ()
+	(define context
+	  "should throw an assertion-exception if the value is not '()")
+	;; Given
+	(define given-actual-value 3)
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value is null)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-not-equal context actual-result #t)
+	(assert-equal context (assertion-error? actual-result) #t))
+     ,(lambda ()
+	(define context
+	  "should throw an assertion-exception if the comparator
+function returns `#f'")
+	;; Given
+	(define given-actual-value 3)
+	(define given-expected-value 4)
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value > given-expected-value)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-not-equal context #t actual-result)
+	(assert-equal context #t (assertion-error? actual-result)))
+     ,(lambda ()
+	(define context
+	  "shouldn't throw an assertion-exception if the values are
+equal")
+	;; Given
+	(define given-actual-value "test")
+	(define given-expected-value "test")
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value is given-expected-value)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-equal context actual-result #t))
+     ,(lambda ()
+	(define context
+	  "shouldn't throw an assertion-exception if the values aren't
+equal")
+	;; Given
+	(define given-actual-value 1)
+	(define given-expected-value 3)
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda ()
+	      (assert-that given-actual-value is not given-expected-value)
+	      #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-equal context actual-result #t))
+     ,(lambda ()
+	(define context
+	  "shouldn't throw an assertion-exception if the value isn't '()")
+	;; Given
+	(define given-actual-value 3)
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value is not null)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-equal context actual-result #t))
+     ,(lambda ()
+	(define context
+	  "shouldn't throw an assertion-exception if the value is '()")
+	;; Given
+	(define given-actual-value '())
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value is null)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-equal context actual-result #t))
+     ,(lambda ()
+	(define context
+	  "shouldn't throw an assertion-exception if the comparator
+function returns `#t'")
+	;; Given
+	(define given-actual-value 4)
+	(define given-expected-value 3)
+	
+	;; When
+	(define actual-result
+	  (catch 'assertion-exception
+	    (lambda () (assert-that given-actual-value > given-expected-value)
+		    #t)
+	    (lambda (key assertion-error) assertion-error)))
+
+	;; Then
+	(assert-equal context #t actual-result)))))
+
+(define assertion-error-type-test
+  `("assertion-error-type test" .
+    (,(lambda ()
+	(define context
+	  "should return the type of the assertion-error")
+	
+	;; Given
+	(define given-assertion-error
+	  (make-assertion-error 'test "test-message" '()))
+
+	;; When
+	(define actual-returned-type
+	  (assertion-error-type given-assertion-error))
+
+	;; Then
+	(assert-equal context 'test actual-returned-type)))))
+
+(define assertion-error-message-test
+  `("assertion-error-message test" .
+    (,(lambda ()
+	(define context
+	  "should return the error message of the assertion-error")
+	
+	;; Given
+	(define given-assertion-error
+	  (make-assertion-error 'test "test-message" '()))
+
+	;; When
+	(define actual-returned-message
+	  (assertion-error-message given-assertion-error))
+
+	;; Then
+	(assert-equal context "test-message" actual-returned-message)))))
+
+(define assertion-error-context-test
+  `("assertion-error-context test" .
+    (,(lambda ()
+	(define context
+	  "should return the context of the assertion-error")
+	
+	;; Given
+	(define given-assertion-error
+	  (make-assertion-error 'test "test-message" '()))
+
+	;; When
+	(define actual-returned-context
+	  (assertion-error-context given-assertion-error))
+
+	;; Then
+	(assert-equal context '() actual-returned-context)))))
+
+(define assertion-error?-test
+  `("assertion-error? test" .
+    (,(lambda ()
+	(define context "should return true because the input value is
+of type assertion-error")
+
+	;; Given
+	(define given-assertion-error
+	  (make-assertion-error 'test "test-message" '()))
+
+	;; When
+	(define actual-return-value
+	  (assertion-error? given-assertion-error))
+
+	;; Then
+	(assert-equal context #t actual-return-value))
+     ,(lambda ()
+	(define context "should return false because the input value
+isn't of type assertion-error")
+
+	;; Given
+	(define given-input
+	  '(1 2 3))
+
+	;; When
+	(define actual-return-value
+	  (assertion-error? given-input))
+
+	;; Then
+	(assert-equal context #f actual-return-value)))))
+
+
 ;;; execute tests
 
 (let ((test-results
@@ -441,7 +703,15 @@ scenario with the number 3")
 		   scenario-description-test
 		   scenario-given-inputs-test
 		   scenario-initialization-logic-test
-		   scenario-number-test)))
+		   scenario-number-test
+		   assert-that-test
+		   assertion-error-type-test
+		   assertion-error-message-test
+		   assertion-error-context-test
+		   assertion-error?-test
+		   ;; verify-behavior-test
+		   ;; behavior-run-hook-test
+		   )))
   (format #t "  [OK     ] => ~a~%  [FAILED ] => ~a~%  [IGNORED] => ~a~%"
 	  (car test-results) (cadr test-results) (caddr test-results))
   (and (> (cadr test-results) 0)

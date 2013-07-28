@@ -36,15 +36,49 @@
 	   scenario-actual-outputs
 	   scenario-actions
 	   scenario-assertions
+	   
+	   ;; assertions
+	   assert-that
+	   make-assertion-error
+	   assertion-error?
+	   assertion-error-type
+	   assertion-error-message
+	   assertion-error-context
+
+	   ;; test execution
+	   verify-behavior
+
+	   ;; hooks
+	   behavior-add-hook
+	   behavior-run-hook
 	   ))
+
+(define hooks (make-hash-table))
+
+;; Following hooks are used by this module:
+;;   `scenario-given-exception-thrown-hook'
+;;   `scenario-when-exception-thrown-hook'
+;;   `scenario-then-exception-thrown-hook'
+;;   `scenario-before-hook'
+;;   `scenario-after-hook'
+;;   `scenario-given-before-hook'
+;;   `scenario-when-before-hook'
+;;   `scenario-then-before-hook'
+;;   `scenario-given-after-hook'
+;;   `scenario-when-after-hook'
+;;   `scenario-then-after-hook'
+;;   `scenario-assertion-failed-hook'
+;;   `story-before-hook'
+;;   `story-after-hook'
 
 (define-syntax define-story
   (syntax-rules (in-order-to as-a i-want-to)
     "Defines a new user story. According to the definition from
 Wikipedia a user story consists of \"one or more sentences in the
 everyday or business language of the end user or user of a system that
-captures what a user does or needs to do\" to get his work done. For
-defining scenarios for a story please use the `scenario' macro."
+captures what a user does or needs to do\" to get his work done. This
+sentences are called scenarios here. For defining scenarios for a
+story please use the `scenario' macro."
     ((_ name description
 	(in-order-to purpose)
 	(as-a who)
@@ -139,3 +173,85 @@ be found '() is returned."
 (define (scenario-assertions scenario)
   "Accessor function for the assertions made for a scenario."
   (cdr (cadr (cdddr scenario))))
+
+(define-syntax assert-that
+  (syntax-rules (is not null)
+      "Verifies that a condition is met. `assert-that' should be used
+to implement the assertions part of a `scenario'."
+      ((_ actual is null)
+       (assert-that* (not (null? actual))
+       		     'invalid-assertion
+       		     "~s should be null"
+       		     actual))
+      ((_ actual is not null)
+       (assert-that* (null? actual)
+       		     'invalid-assertion
+       		     "~s shouldn't be null"
+       		     actual))
+      ((_ actual is expected)
+       (assert-that* (not (equal? actual expected))
+       		     'invalid-assertion
+       		     "~s should be equal to ~s"
+       		     actual expected))
+      ((_ actual is not unexpected)
+       (assert-that* (equal? actual unexpected)
+       		     'invalid-assertion
+       		     "~s shouldn't be equal to ~s"
+       		     actual unexpected))
+      ((_ actual comparator expected)
+       (assert-that* (not (comparator actual expected))
+		     'invalid-assertion
+       		     "~s ~a ~s"
+       		     actual comparator expected))))
+
+(define-syntax assert-that*
+  (syntax-rules ()
+    ((_ condition type format-arguments format-arguments* ...)
+     (if condition
+	 (throw 'assertion-exception
+		(make-assertion-error
+		 type
+		 (format #f format-arguments format-arguments* ...)
+		 '()))))))
+
+(define (make-assertion-error type message context)
+  "Create a new assertion error."
+  `(,type ,message ,context))
+
+(define (assertion-error-type assertion-error)
+  "Accessor function for the type of an `assertion-error'. The helps
+to clarify the cause of the error."
+  (car assertion-error))
+
+(define (assertion-error-message assertion-error)
+  "Accessor function for the message of an `assertion-error'. Each
+`assertion-error' should come with a human readable error message."
+  (cadr assertion-error))
+
+(define (assertion-error-context assertion-error)
+  "Acessor function for the context the `assertion-error' occurred
+in."
+  (caddr assertion-error))
+
+(define (assertion-error? data)
+  "Returns `#t' if `data' is an `assertion-error' or `#f' otherwise."
+  (and (list? data)
+       (= (length data) 3)
+       (symbol? (car data))
+       (string? (cadr data))))
+
+(define (verify-behavior . stories)
+  "Verifies the behavior of the implementation of the stories under
+test. Returns either `#t' if the behavior of the implementation
+complies with the stories or `#f' otherwise."
+  #f)
+
+(define (behavior-add-hook hook function)
+  "Adds a function to `hook'. The behavior hooks could be used to do,
+for example, initialization of the environment in which a behavior
+should be verified." 
+  #f)
+
+(define (behavior-run-hook hook . arguments)
+  "Runs all functions of a `hook' with the given `arguments'."
+  #f)

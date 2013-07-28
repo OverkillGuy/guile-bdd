@@ -1,0 +1,27 @@
+#+TITLE: guile-bdd TODO
+#+AUTHOR: see AUTHORS
+
+* Tests
+
+** TODO implement `verify-behavior-test'
+   - Scenario 1 ::
+     - Given :: there is one test which fails and one which succeeds
+     - When :: the tests are executed
+     - Then :: the return value of `verify-behavior-test' will be `#f'
+   - Scenario 2 ::
+     - Given :: that there is one test which succeeds
+     - When :: the test is executed
+     - Then :: the return value of `verify-behavior-test' will be `#t'
+
+** TODO implement `behavior-run-hook-test'
+   - Scenario 1 ::
+     - Given :: a function `f() = 3' is registered for `test-hook`
+     - When :: the hook is run
+     - Then :: it should be verified that `f()' was called and
+               returned `3'
+   - Scenario 2 ::
+     - Given :: a function `f(x) = x ^ 2' is registered for
+                `test-hook-args'
+     - When :: the hook is run
+     - Then :: it schould be verified that `f(x)' was called and
+               returned `x ^ 2'

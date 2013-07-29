@@ -52,6 +52,15 @@
   (map (lambda (test-case)
 	 (test-case)) (cdr suite)))
 
+(define (observe-aspect observable)
+  (define last-return-value #f)
+  (lambda (. args)
+    (if (null? args)
+	(set! last-return-value (observable))
+	(cond
+	 ((equal? (car args) 'verify-call) last-return-value)
+	 (else (set! last-return-value (apply observable args)))))))
+
 (define (run-suites . suites)
   (evaluate-results (map count-results (map run-suite suites))))
 
@@ -687,6 +696,34 @@ isn't of type assertion-error")
 	;; Then
 	(assert-equal context #f actual-return-value)))))
 
+(define behavior-run-hook-test
+  `("behavior-run-hook test" .
+    (,(lambda ()
+	(define context "should call function of hook without arguments")
+
+	;; Given
+	(define (f) 3)
+	(define observable-f (observe-aspect f))
+	(behavior-add-hook 'test-hook-no-args observable-f)
+
+	;; When
+	(behavior-run-hook 'test-hook-no-args)
+
+	;; Then
+	(assert-equal context 3 (observable-f 'verify-call)))
+      ,(lambda ()
+ 	(define context "should call function of hook with one argument")
+
+ 	;; Given
+	(define (f x) (* x x))
+	(define observable-f (observe-aspect f))
+	(behavior-add-hook 'test-hook-one-arg observable-f)
+
+ 	;; When
+	(behavior-run-hook 'test-hook-one-arg 2)
+
+ 	;; Then
+ 	(assert-equal context 4 (observable-f 'verify-call))))))
 
 ;;; execute tests
 
@@ -709,8 +746,8 @@ isn't of type assertion-error")
 		   assertion-error-message-test
 		   assertion-error-context-test
 		   assertion-error?-test
+		   behavior-run-hook-test
 		   ;; verify-behavior-test
-		   ;; behavior-run-hook-test
 		   )))
   (format #t "  [OK     ] => ~a~%  [FAILED ] => ~a~%  [IGNORED] => ~a~%"
 	  (car test-results) (cadr test-results) (caddr test-results))

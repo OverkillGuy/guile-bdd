@@ -249,9 +249,13 @@ complies with the stories or `#f' otherwise."
 (define (behavior-add-hook hook function)
   "Adds a function to `hook'. The behavior hooks could be used to do,
 for example, initialization of the environment in which a behavior
-should be verified." 
-  #f)
+should be verified."
+   (hash-set! hooks hook (cons function (hash-ref hooks hook '()))))
 
 (define (behavior-run-hook hook . arguments)
   "Runs all functions of a `hook' with the given `arguments'."
-  #f)
+  (let run-next ((remaining-functions (hash-ref hooks hook)))
+    (if (null? remaining-functions)
+	#t
+	(begin (apply (car remaining-functions) arguments)
+	       (run-next (cdr remaining-functions))))))

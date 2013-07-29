@@ -13,7 +13,7 @@
      - When :: the test is executed
      - Then :: the return value of `verify-behavior-test' will be `#t'
 
-** TODO implement `behavior-run-hook-test'
+** DONE implement `behavior-run-hook-test'
    - Scenario 1 ::
      - Given :: a function `f() = 3' is registered for `test-hook`
      - When :: the hook is run

@@ -22,7 +22,6 @@
 (use-modules (ice-9 format)
 	     (test bdd))
 
-
 ;;; test helper functions
 
 (define (assertion-error msg)
@@ -96,12 +95,12 @@
   (i-want-to intention)
   (scenario 1 (format #f "test scenario ~a" 1)
 	    (given ((x 5))
-	      (do-some-initialization)
-	      (and-some-more))
+	      (display "prepare ...")
+	      (write "prepare more ..."))
 	    (when ()
-	      (some-action))
+	      (write "do something ..."))
 	    (then
-		(assert-this-and-that))))
+		(assert-that 1 is 3))))
 
 (define-story story-with-three-scenarios "Story with three scenarios"
   (in-order-to test-purpose)
@@ -109,26 +108,26 @@
   (i-want-to intention)
   (scenario 1 (format #f "test scenario ~a" 1)
 	    (given ((x 5))
-	      (do-some-initialization)
-	      (and-some-more))
+	      (display "prepare ...")
+	      (write "prepare more ..."))
 	    (when ()
-	      (some-action))
+	      (write "do something ..."))
 	    (then
-		(assert-this-and-that)))
+		(assert-that 1 is 3)))
   (scenario 2 (format #f "test scenario ~a" 2)
 	    (given ()
-	      (do-some-initialization)
-	      (and-some-more))
+	      (display "prepare ...")
+	      (write "prepare more ..."))
 	    (when ((y 6))
-	      (some-action))
+	      (write "do something ..."))
 	    (then
-		(assert-this-and-that)))
+		(assert-that 1 is 3)))
   (scenario 4 (format #f "test scenario ~a" 4)
 	    (given ())
 	    (when ()
-	      (some-action))
+	      (write "do something"))
 	    (then
-		(assert-this-and-that))))
+		(assert-that 3 is not 5))))
 
 (define-story story-without-scenarios "Story without scenarios"
   (in-order-to test-purpose)
@@ -258,9 +257,7 @@ the numbers 1, 2 and 4.")
 	;; Then
 	(assert-equal
 	 context 
-	 (scenario 4 (format #f "test scenario ~a" 4)
-		   (given ()) (when () (some-action))
-		   (then (assert-this-and-that)))
+	 (caddr (cadddr (cddr story-with-three-scenarios)))
 	 actual-returned-scenario))
      ,(lambda ()
 	(define context
@@ -277,12 +274,7 @@ the numbers 1, 2 and 4.")
 	;; Then
 	(assert-equal
 	 context 
-	 (scenario 1 (format #f "test scenario ~a" 1)
-		   (given ((x 5))
-		     (do-some-initialization)
-		     (and-some-more))
-		   (when () (some-action))
-		   (then (assert-this-and-that)))
+	 (car (cadddr (cddr story-with-three-scenarios)))
 	 actual-returned-scenario))
      ,(lambda ()
 	(define context "should return '() because the story doesn't have a
@@ -308,7 +300,7 @@ scenario with the number 3")
 	(define given-scenario
 	  (scenario 1 "scenario-description"
 		    (given ())
-		    (when () (test-action))
+		    (when () (display "do something ..."))
 		    (then)))
 
 	;; When
@@ -316,7 +308,7 @@ scenario with the number 3")
 	  (scenario-actions given-scenario))
 
 	;; Then
-	(assert-equal context '((test-action))
+	(assert-equal context '((display "do something ..."))
 		      actual-returned-actions)))))
 
 (define scenario-actual-outputs-test
@@ -349,14 +341,15 @@ scenario with the number 3")
 	  (scenario 1 "scenario-description"
 		    (given ())
 		    (when ())
-		    (then (assertion1) (assertion2))))
+		    (then (assert-that 1 is not null) (assert-that 3 is 5))))
 
 	;; When
 	(define actual-returned-assertions
 	  (scenario-assertions given-scenario))
 
 	;; Then
-	(assert-equal context '((assertion1) (assertion2))
+	(assert-equal context
+		      '((assert-that 1 is not null) (assert-that 3 is 5))
 		      actual-returned-assertions)))))
 
 (define scenario-description-test
@@ -370,7 +363,7 @@ scenario with the number 3")
 	  (scenario 1 given-description
 		    (given ())
 		    (when ())
-		    (then (assertion1) (assertion2))))
+		    (then (assert-that 1 is not null) (assert-that 3 is 5))))
 
 	;; When
 	(define actual-returned-description
@@ -410,7 +403,7 @@ scenario with the number 3")
 	(define given-scenario
 	  (scenario 1 "scenario-description"
 		    (given ()
-		      (init))
+		      (display "init ..."))
 		    (when ())
 		    (then)))
 
@@ -419,7 +412,7 @@ scenario with the number 3")
 	  (scenario-initialization-logic given-scenario))
 
 	;; Then
-	(assert-equal context '((init))
+	(assert-equal context '((display "init ..."))
 		      actual-returned-initialization-logic)))))
 
 (define scenario-number-test
@@ -725,6 +718,47 @@ isn't of type assertion-error")
  	;; Then
  	(assert-equal context 4 (observable-f 'verify-call))))))
 
+(define verify-behavior-test
+  `("verify-behavior test" .
+    (,(lambda ()
+	(define context "should return `#f' if a test failed")
+
+	;; Given
+	(define (square x) (* x 2))
+	(define-story calculate-the-square-of-x "Calculate the square of x"
+	  (in-order-to "know the area of a square with the side x")
+	  (as-a "mathematician")
+	  (i-want-to "calculate the square of x")
+	  (scenario 1 "For an x of 3 the square should be 9"
+		    (given ((x 3)))
+		    (when ((actual-result (square x))))
+		    (then (assert-that actual-result is 9))))
+
+	;; When
+	(define actual-result (verify-behavior calculate-the-square-of-x))
+
+	;; Then
+	(assert-equal context #f actual-result))
+      ,(lambda ()
+ 	(define context "should return `#t' if all tests succeeded")
+
+ 	;; Given
+	(define (square x) (* x x))
+	(define-story calculate-the-square-of-x "Calculate the square of x"
+	  (in-order-to "know the area of a square with the side x")
+	  (as-a "mathematician")
+	  (i-want-to "calculate the square of x")
+	  (scenario 1 "For an x of 3 the square should be 9"
+		    (given ((x 3)))
+		    (when ((actual-result (square x))))
+		    (then (assert-that actual-result is 9))))
+
+ 	;; When
+	(define actual-result (verify-behavior calculate-the-square-of-x))
+
+	;; Then
+	(assert-equal context #t actual-result)))))
+
 ;;; execute tests
 
 (let ((test-results
@@ -747,7 +781,7 @@ isn't of type assertion-error")
 		   assertion-error-context-test
 		   assertion-error?-test
 		   behavior-run-hook-test
-		   ;; verify-behavior-test
+		   verify-behavior-test
 		   )))
   (format #t "  [OK     ] => ~a~%  [FAILED ] => ~a~%  [IGNORED] => ~a~%"
 	  (car test-results) (cadr test-results) (caddr test-results))

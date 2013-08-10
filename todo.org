@@ -3,7 +3,7 @@
 
 * Tests
 
-** TODO implement `verify-behavior-test'
+** DONE implement `verify-behavior-test'
    - Scenario 1 ::
      - Given :: there is one test which fails and one which succeeds
      - When :: the tests are executed

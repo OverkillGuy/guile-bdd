@@ -25,3 +25,6 @@
      - When :: the hook is run
      - Then :: it schould be verified that `f(x)' was called and
                returned `x ^ 2'
+* Improvements
+** TODO add function to clear all hooks
+** TODO clear all hooks when loaded

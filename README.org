@@ -1,24 +1,10 @@
-                              guile-bdd
-                              =========
-
-Author: Cyrill Schenkel <cyrill.schenkel (at) gmail.com>
-Date: 2013-08-12 11:55:26 CEST
-
+#+TITLE: guile-bdd
+#+AUTHOR: Cyrill Schenkel
+#+EMAIL: cyrill.schenkel (at) gmail.com
 
 A behavior driven development framework for the GNU Guile interpreter.
 
-Table of Contents
-=================
-1 Build Instructions 
-2 Usage 
-    2.1 Include Module 
-    2.2 Define Story 
-    2.3 Run Tests 
-3 License 
-
-
-1 Build Instructions 
-~~~~~~~~~~~~~~~~~~~~~
+* Build Instructions
   The GNU buildsystem is used for building guile-bdd.
   
   1. ./configure
@@ -27,42 +13,40 @@ Table of Contents
 
   3. make install
 
-2 Usage 
-~~~~~~~~
+* Usage
   For a usage example take a look at the unit tests in the `test'
   directory or see the example application[1].
 
-2.1 Include Module 
-===================
+** Include Module
    For an example how the module can be included see following code
    snippet:
 
-  (use-modules (test bdd))
+   #+BEGIN_SRC scheme
+   (use-modules (test bdd))
+   #+END_SRC
 
-
-2.2 Define Story 
-=================
+** Define Story
    For defining a story the `define-story' and `scenario' macros can
    be used. A little example code follows:
 
-  (define-story story-name "story description"
-    (in-order-to "intention")
-    (as-a "actor")
-    (i-want-to "action")
-    (scenario 1 "should ... (scenario description)"
-              (given ((given-value "value"))
-                (init))
-              (when ((actual-value (do-something given-value)))
-                (do-something-else))
-              (then
-                (assert-that actual-value is "expected value"))))
-
+   #+BEGIN_SRC scheme
+     (define-story story-name "story description"
+       (in-order-to "intention")
+       (as-a "actor")
+       (i-want-to "action")
+       (scenario 1 "should ... (scenario description)"
+                 (given ((given-value "value"))
+                   (init))
+                 (when ((actual-value (do-something given-value)))
+                   (do-something-else))
+                 (then
+                   (assert-that actual-value is "expected value"))))
+   #+END_SRC
 
    For more information on defining stories see the documentation of
    the `define-story' and `scenario' macros.
 
-2.3 Run Tests 
-==============
+** Run Tests
    In the context of guile-bdd the term "verify if the behavior of the
    current environment matches the behavior specified by the given
    stories" is used instead of "run the given tests to verify the
@@ -72,13 +56,11 @@ Table of Contents
    example application[1] and/or the documentation of the
    `verify-behavior' function.
 
-3 License 
-~~~~~~~~~~
+* License
   See the LICENSE file.
 
-
-
+* Footnotes
 
 [1] The GIT repo. of the example application:
-[https://github.com/sirius94/guile-bdd-example]
+[[https://github.com/sirius94/guile-bdd-example]]
 
